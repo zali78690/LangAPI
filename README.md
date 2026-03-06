@@ -12,6 +12,8 @@ LangAPI is a translation API built with FastAPI and HuggingFace's MarianMT model
 - Interactive API docs at `/docs` (Swagger UI)
 - Health check endpoint for monitoring and readiness
 - Input validation with clear error messages
+- Structured JSON logging (structlog) with console mode for development
+- Request correlation IDs (X-Request-ID) for tracing
 
 ## Tech Stack
 
@@ -21,6 +23,7 @@ LangAPI is a translation API built with FastAPI and HuggingFace's MarianMT model
 | FastAPI | Web framework |
 | HuggingFace transformers | Model loading and inference |
 | Helsinki-NLP/opus-mt | MarianMT translation models |
+| structlog | Structured logging (JSON/console) |
 | pydantic-settings | Configuration management |
 | uv | Package management |
 | ruff | Formatting and linting |
@@ -79,6 +82,7 @@ Settings are loaded from environment variables with the `LANGAPI_` prefix.
 |----------|-------------|---------|
 | `LANGAPI_SUPPORTED_LANGUAGES` | JSON dict of language codes to model IDs | `{"fr": "Helsinki-NLP/opus-mt-en-fr", "de": "Helsinki-NLP/opus-mt-en-de", "es": "Helsinki-NLP/opus-mt-en-es"}` |
 | `LANGAPI_MODEL_CACHE_DIR` | Override HuggingFace model cache directory | `None` (uses HF default) |
+| `LANGAPI_DEBUG` | Enable console-formatted logs for development | `False` |
 
 ## Project Structure
 
@@ -88,12 +92,14 @@ lang_api/
   core/
     app.py                 # App factory, lifespan, exception handlers
     config.py              # pydantic-settings configuration
+    logging.py             # Structured logging configuration (structlog)
   models/
     services.py            # TranslationService — model loading and inference
   api/
     routes.py              # API endpoint handlers
     schemas.py             # Pydantic request/response models
     dependencies.py        # FastAPI dependency injection
+    middleware.py           # Request logging and correlation ID middleware
 decision_records/        # Architecture Decision Records (YAML)
 ```
 

@@ -1,17 +1,21 @@
 """FastAPI application instance and startup/shutdown logic."""
 
-import logging
+import warnings
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
+import structlog
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
+from transformers import logging as transformers_logging
 
+from lang_api.api.middleware import RequestLoggingMiddleware
 from lang_api.api.routes import router
 from lang_api.core.config import Settings
+from lang_api.core.logging import configure_logging
 from lang_api.models.services import TranslationService
 
-logger = logging.getLogger(__name__)
+logger = structlog.stdlib.get_logger(__name__)
 
 
 @asynccontextmanager
@@ -24,6 +28,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     Yields:
         None: Application runs between startup and shutdown
     """
+    warnings.filterwarnings("ignore", category=FutureWarning, module="transformers")
+    transformers_logging.set_verbosity_error()
+
     settings = Settings()
     app.state.translation_service = TranslationService.load_models(settings)
     yield
@@ -38,6 +45,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     Returns:
         FastAPI: Configured app instance.
     """
+    if settings is None:
+        settings = Settings()
+
+    configure_logging(debug=settings.debug)
+
     app = FastAPI(
         title="LangAPI",
         description="Translation API service serving Helsinki NLP models",
@@ -45,6 +57,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         lifespan=lifespan,
     )
 
+    app.add_middleware(RequestLoggingMiddleware)
     app.include_router(router)
 
     @app.exception_handler(ValueError)

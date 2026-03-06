@@ -10,6 +10,8 @@ dependencies = [
     "transformers",
     "torch",
     "sentencepiece",
+    "sacremoses",
+    "structlog",
 ]
 
 [dependency-groups]

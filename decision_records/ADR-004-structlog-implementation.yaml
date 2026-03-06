@@ -1,0 +1,16 @@
+ADR-007: structlog Implementation (supersedes ADR-004)
+Status: Implemented
+Context: >
+  Production APIs need machine-parseable logs for monitoring and debugging.
+  Challenge brief explicitly mentions monitoring as an assessment criterion.
+Decision: >
+  Use structlog with JSONRenderer (production) and ConsoleRenderer (debug).
+  contextvars for request-scoped data (request_id, method, path) — automatically
+  included in all logs within a request without explicit passing.
+  Request logging middleware with correlation IDs and timing.
+  LANGAPI_DEBUG env var toggles between JSON and console output.
+Consequences:
+  - One dependency replaces 45 lines of custom formatter code
+  - contextvars eliminates manual extra={} on every log call
+  - stdlib loggers (uvicorn) still work via structlog stdlib integration
+  - /health excluded from request logging to reduce noise

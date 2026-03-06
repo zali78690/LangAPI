@@ -23,6 +23,11 @@ class TestSettingsDefaults:
         settings = Settings()
         assert settings.model_cache_dir is None
 
+    def test_debug_defaults_to_false(self):
+        """Debug mode is off by default."""
+        settings = Settings()
+        assert settings.debug is False
+
 
 class TestSettingsEnvOverride:
     """Tests for environment variable overrides."""
@@ -41,6 +46,12 @@ class TestSettingsEnvOverride:
         monkeypatch.setenv("LANGAPI_MODEL_CACHE_DIR", "/tmp/models")
         settings = Settings()
         assert settings.model_cache_dir == "/tmp/models"
+
+    def test_debug_enabled_via_env(self, monkeypatch: pytest.MonkeyPatch):
+        """Debug mode can be enabled via LANGAPI_DEBUG."""
+        monkeypatch.setenv("LANGAPI_DEBUG", "true")
+        settings = Settings()
+        assert settings.debug is True
 
     def test_invalid_supported_languages_format_raises(self, monkeypatch: pytest.MonkeyPatch):
         """Non-JSON string for supported_languages raises ValidationError."""
