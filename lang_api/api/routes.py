@@ -41,11 +41,7 @@ def get_languages(service: TranslationServiceDep) -> LanguagesResponse:
     Returns:
         LanguagesResponse: Available language codes and model IDs.
     """
-    return LanguagesResponse(
-        supported_languages={
-            lang: f"Helsinki-NLP/opus-mt-en-{lang}" for lang in service.supported_languages
-        }  # TODO: Store the original supported_languages dict on the service
-    )
+    return LanguagesResponse(supported_languages=service.language_model_mapping)
 
 
 @router.get("/health", response_model=HealthResponse)

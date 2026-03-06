@@ -14,6 +14,7 @@ class TranslationService:
     """Loads and runs Huggingface translation models, keyed by language code."""
 
     models: dict[str, tuple[MarianTokenizer, MarianMTModel]]
+    language_model_mapping: dict[str, str]
 
     @staticmethod
     def load_models(settings: Settings) -> TranslationService:
@@ -30,7 +31,7 @@ class TranslationService:
             tokenizer = MarianTokenizer.from_pretrained(model_id)
             model = MarianMTModel.from_pretrained(model_id)
             models[lang] = (tokenizer, model)
-        return TranslationService(models=models)
+        return TranslationService(models=models, language_model_mapping=settings.supported_languages)
 
     def translate(self, text: str, target_language: str) -> str:
         """Translate english text to target language.
