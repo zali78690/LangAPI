@@ -1,0 +1,14 @@
+ADR-003: Service Layer Without Protocol
+Status: Implemented
+Context: >
+  Need separation between HTTP layer and model inference. A Protocol would
+  add a formal interface but only one concrete implementation exists.
+Decision: >
+  Concrete TranslationService dataclass injected via FastAPI Depends. No Protocol.
+Consequences:
+  - Simpler codebase, fewer files
+  - Testable via MagicMock(spec=TranslationService) and FastAPI dependency override
+  - Protocol can be introduced later if a second backend arises (Rule of Three)
+Alternatives Rejected:
+  - Protocol-based abstraction: premature per YAGNI with single implementation
+  - No service layer: mixes HTTP and ML concerns in route handlers, violates SRP

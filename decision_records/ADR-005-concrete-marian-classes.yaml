@@ -1,0 +1,16 @@
+ADR-005: Concrete Marian Classes over Auto/Pipeline
+Status: Implemented
+Context: >
+  transformers v5.3.0 removed the "translation" pipeline task, breaking pipeline API.
+  Auto classes (AutoTokenizer, AutoModelForSeq2SeqLM) have poor type stubs causing
+  pyright/Pylance errors requiring cast() workarounds.
+Decision: >
+  Use MarianTokenizer + MarianMTModel directly from transformers.models.marian
+  for full type safety and explicit model control.
+Consequences:
+  - Full type safety with pyright, no cast() hacks needed
+  - Explicit tokenize → generate → decode flow, easier to debug
+  - Only supports Marian model family (acceptable per YAGNI, only serving opus-mt)
+Alternatives Rejected:
+  - Pipeline API: removed in transformers v5.3.0, no longer functional
+  - Auto classes: poor type annotations, unnecessary abstraction for single model family

@@ -1,0 +1,16 @@
+ADR-006: Three-Tier Error Handling
+Status: Implemented
+Context: >
+  Production APIs need consistent, secure error responses. Internal details
+  (stack traces, file paths) must never leak to clients.
+Decision: >
+  Three layers: Pydantic validation returns 422 automatically, ValueError caught
+  by custom handler returns 400, catch-all Exception handler returns generic 500.
+Consequences:
+  - Consistent ErrorResponse schema across all error types
+  - No stack traces or internal details leaked in 500 responses
+  - logger.warning for expected errors (400), logger.exception for unexpected (500)
+  - Client errors vs server errors clearly distinguished by status code
+Alternatives Rejected:
+  - Single catch-all handler: loses distinction between client and server errors
+  - No catch-all: FastAPI default 500 leaks stack traces in debug mode

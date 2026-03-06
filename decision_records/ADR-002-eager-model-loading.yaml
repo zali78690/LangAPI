@@ -1,0 +1,14 @@
+ADR-002: Eager Model Loading at Startup
+Status: Implemented
+Context: >
+  Models can be loaded eagerly at startup or lazily on first request.
+  Lazy loading causes unpredictable first-request latency (10-30s per model).
+Decision: >
+  Load all models in FastAPI lifespan context manager before accepting requests.
+Consequences:
+  - Predictable latency for all requests after startup
+  - Longer startup time (~30-60s for 3 models)
+  - Health endpoint accurately reflects model readiness
+Alternatives Rejected:
+  - Lazy loading: first request per language has 10-30s cold-start delay
+  - Background loading: health check unreliable during startup, added complexity

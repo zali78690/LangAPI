@@ -1,0 +1,15 @@
+ADR-001: Framework and Model Choice
+Status: Implemented
+Context: >
+  Need RESTful API serving translation models. Require auto-generated docs,
+  type safety, built-in validation, and async-capable framework.
+Decision: >
+  FastAPI with Helsinki-NLP/opus-mt-en-{fr,de,es} via direct MarianTokenizer + MarianMTModel.
+Consequences:
+  - Auto-generated OpenAPI docs out of the box
+  - Pydantic validation integrated at framework level
+  - transformers pipeline is synchronous; use plain def endpoints with FastAPI threadpool
+  - opus-mt models are small (~300MB each), permissively licensed (CC-BY-4.0)
+Alternatives Rejected:
+  - Flask: no built-in validation, no auto-docs, no native async support
+  - Django REST: too heavyweight for a single-purpose translation API
