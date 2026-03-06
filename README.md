@@ -4,7 +4,7 @@ RESTful API serving Helsinki-NLP translation models for English to French, Germa
 
 ## Overview
 
-LangAPI is a translation API built with FastAPI and HuggingFace's MarianMT models. It serves translations via a clean REST interface with auto-generated OpenAPI documentation.
+LangAPI is a translation API built with FastAPI and HuggingFace's MarianMT models. It serves translations via a REST interface with auto-generated OpenAPI documentation.
 
 ## Features
 
@@ -14,6 +14,7 @@ LangAPI is a translation API built with FastAPI and HuggingFace's MarianMT model
 - Input validation with clear error messages
 - Structured JSON logging (structlog) with console mode for development
 - Request correlation IDs (X-Request-ID) for tracing
+- Prometheus metrics endpoint (`/metrics`) for production monitoring
 
 ## Tech Stack
 
@@ -24,6 +25,7 @@ LangAPI is a translation API built with FastAPI and HuggingFace's MarianMT model
 | HuggingFace transformers | Model loading and inference |
 | Helsinki-NLP/opus-mt | MarianMT translation models |
 | structlog | Structured logging (JSON/console) |
+| prometheus-fastapi-instrumentator | Prometheus metrics |
 | pydantic-settings | Configuration management |
 | uv | Package management |
 | ruff | Formatting and linting |
@@ -55,6 +57,7 @@ Once running, visit http://localhost:8000/docs for the interactive Swagger UI.
 | `POST` | `/api/v1/translate` | Translate English text to target language | 200, 400, 422, 500 |
 | `GET` | `/api/v1/languages` | List supported languages and model IDs | 200 |
 | `GET` | `/health` | Service health and model readiness | 200 |
+| `GET` | `/metrics` | Prometheus metrics (not in OpenAPI) | 200 |
 
 ### Example: Translate text
 
@@ -93,6 +96,7 @@ lang_api/
     app.py                 # App factory, lifespan, exception handlers
     config.py              # pydantic-settings configuration
     logging.py             # Structured logging configuration (structlog)
+    metrics.py             # Prometheus metrics definitions and setup
   models/
     services.py            # TranslationService — model loading and inference
   api/
@@ -101,6 +105,18 @@ lang_api/
     dependencies.py        # FastAPI dependency injection
     middleware.py           # Request logging and correlation ID middleware
 decision_records/        # Architecture Decision Records (YAML)
+tests/
+  conftest.py              # Shared fixtures (mock services, test client)
+  api/
+    test_routes.py         # Endpoint integration tests
+    test_middleware.py      # Request logging middleware tests
+    test_schemas.py        # Pydantic schema validation tests
+  core/
+    test_config.py         # Settings and env var tests
+    test_logging.py        # Structlog configuration tests
+    test_metrics.py        # Prometheus metrics tests
+  models/
+    test_services.py       # TranslationService unit tests
 ```
 
 ## Development

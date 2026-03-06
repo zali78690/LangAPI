@@ -13,6 +13,7 @@ from lang_api.api.middleware import RequestLoggingMiddleware
 from lang_api.api.routes import router
 from lang_api.core.config import Settings
 from lang_api.core.logging import configure_logging
+from lang_api.core.metrics import setup_metrics
 from lang_api.models.services import TranslationService
 
 logger = structlog.stdlib.get_logger(__name__)
@@ -31,8 +32,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     warnings.filterwarnings("ignore", category=FutureWarning, module="transformers")
     transformers_logging.set_verbosity_error()
 
-    settings = Settings()
-    app.state.translation_service = TranslationService.load_models(settings)
+    app.state.translation_service = TranslationService.load_models(app.state.settings)
     yield
 
 
@@ -57,7 +57,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         lifespan=lifespan,
     )
 
+    app.state.settings = settings
     app.add_middleware(RequestLoggingMiddleware)
+    setup_metrics(app)
     app.include_router(router)
 
     @app.exception_handler(ValueError)

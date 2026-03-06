@@ -64,7 +64,7 @@ class TestTranslateEndpoint:
         assert response.status_code == 500
         data = response.json()
         assert data["error"] == "internal_error"
-        assert "something broke" not in data["detail"]  # no stack trace leaked
+        assert "something broke" not in data["detail"]
 
 
 class TestLanguagesEndpoint:
@@ -89,12 +89,10 @@ class TestHealthEndpoint:
         assert data["models_loaded"] is True
         assert "fr" in data["supported_languages"]
 
-    def test_health_when_no_models(self):
+    def test_health_when_no_models(self, empty_translation_service: TranslationService):
         """200 unhealthy when no models loaded."""
-        empty_service = TranslationService(models={}, language_model_mapping={})
-
         app = create_app()
-        app.dependency_overrides[get_translation_service] = lambda: empty_service
+        app.dependency_overrides[get_translation_service] = lambda: empty_translation_service
         with TestClient(app, raise_server_exceptions=False) as client:
             response = client.get("/health")
         assert response.status_code == 200

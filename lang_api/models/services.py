@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import cast
 
 import structlog
 from transformers.models.marian import MarianMTModel, MarianTokenizer
 
 from lang_api.core.config import Settings
+from lang_api.core.metrics import MODEL_LOAD_DURATION, TRANSLATION_DURATION, TRANSLATION_REQUESTS
 
 logger = structlog.stdlib.get_logger(__name__)
 
@@ -33,8 +35,9 @@ class TranslationService:
         logger.info("Loading translation models...")
         for lang, model_id in settings.supported_languages.items():
             logger.info("Loading model %s for %s", model_id, lang)
-            tokenizer = MarianTokenizer.from_pretrained(model_id)
-            model = MarianMTModel.from_pretrained(model_id)
+            with MODEL_LOAD_DURATION.labels(language=lang).time():
+                tokenizer = MarianTokenizer.from_pretrained(model_id)
+                model = MarianMTModel.from_pretrained(model_id)
             models[lang] = (tokenizer, model)
         logger.info("Models loaded: %s", list(settings.supported_languages.keys()))
         return TranslationService(models=models, language_model_mapping=settings.supported_languages)
@@ -58,11 +61,12 @@ class TranslationService:
         logger.info("Translating to %s (%d chars)", target_language, len(text))
 
         tokenizer, model = self.models[target_language]
-        inputs = tokenizer(text, return_tensors="pt", padding=True)
-        outputs = model.generate(input_ids=inputs["input_ids"])
-        result = tokenizer.decode(outputs[0], skip_special_tokens=True)
-        if isinstance(result, list):
-            result = result[0]
+
+        with TRANSLATION_DURATION.labels(target_language=target_language).time():
+            inputs = tokenizer(text, return_tensors="pt", padding=True)
+            outputs = model.generate(input_ids=inputs["input_ids"])
+            result = cast(str, tokenizer.decode(outputs[0], skip_special_tokens=True))
+            TRANSLATION_REQUESTS.labels(target_language=target_language).inc()
 
         logger.info(
             "Translation complete", input_chars=len(text), output_chars=len(result), target_language=target_language

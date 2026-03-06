@@ -1,0 +1,17 @@
+ADR-008: Prometheus Metrics
+Status: Implemented
+Context: >
+  Challenge question 4 asks how to monitor this translation service in production.
+  Need both HTTP-level and ML-specific observability metrics.
+Decision: >
+  Use prometheus-fastapi-instrumentator for automatic HTTP metrics (RED method).
+  Three custom prometheus_client metrics for business-layer observability:
+  translation_requests_total (Counter by language), translation_duration_seconds
+  (Histogram by language), model_load_duration_seconds (Histogram by language).
+  Metrics exposed at /metrics, excluded from request logging.
+Consequences:
+  - /metrics endpoint available for Prometheus scraping
+  - Auto HTTP metrics cover rate, errors, duration (RED method)
+  - Custom metrics isolate ML inference latency from HTTP overhead
+  - /health and /metrics excluded from HTTP metrics to reduce noise
+  - One new dependency (prometheus-fastapi-instrumentator)

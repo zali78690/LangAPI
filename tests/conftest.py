@@ -1,4 +1,4 @@
-"""Shared fixtures for API tests."""
+"""Shared fixtures for tests."""
 
 from collections.abc import Generator
 from unittest.mock import MagicMock
@@ -12,19 +12,35 @@ from lang_api.models.services import TranslationService
 
 
 @pytest.fixture
-def mock_translation_service() -> TranslationService:
+def mock_tokenizer() -> MagicMock:
+    """Fake tokenizer that returns a dummy tensor and decodes to a string."""
+    tokenizer = MagicMock()
+    tokenizer.return_value = {"input_ids": MagicMock()}
+    tokenizer.decode.return_value = "Bonjour le monde"
+    return tokenizer
+
+
+@pytest.fixture
+def mock_model() -> MagicMock:
+    """Fake model that returns a dummy tensor from generate()."""
+    model = MagicMock()
+    model.generate.return_value = [MagicMock()]
+    return model
+
+
+@pytest.fixture
+def mock_translation_service(mock_tokenizer: MagicMock, mock_model: MagicMock) -> TranslationService:
     """TranslationService with mocked models for fr."""
-    mock_tokenizer = MagicMock()
-    mock_tokenizer.return_value = {"input_ids": MagicMock()}
-    mock_tokenizer.decode.return_value = "Bonjour le monde"
-
-    mock_model = MagicMock()
-    mock_model.generate.return_value = [MagicMock()]
-
     return TranslationService(
         models={"fr": (mock_tokenizer, mock_model)},
         language_model_mapping={"fr": "Helsinki-NLP/opus-mt-en-fr"},
     )
+
+
+@pytest.fixture
+def empty_translation_service() -> TranslationService:
+    """TranslationService with no models loaded."""
+    return TranslationService(models={}, language_model_mapping={})
 
 
 @pytest.fixture

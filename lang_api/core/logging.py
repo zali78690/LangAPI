@@ -32,3 +32,7 @@ def configure_logging(debug: bool = False) -> None:
 
     # Route stdlib logging (e.g. uvicorn) through structlog processors
     logging.basicConfig(format="%(message)s", stream=sys.stdout, level=logging.INFO, force=True)
+
+    # Silence noisy HTTP logs from HuggingFace model downloads
+    logging.getLogger("httpx").setLevel(logging.WARNING)
+    logging.getLogger("huggingface_hub").setLevel(logging.WARNING)

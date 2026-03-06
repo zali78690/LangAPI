@@ -12,6 +12,7 @@ dependencies = [
     "sentencepiece",
     "sacremoses",
     "structlog",
+    "prometheus-fastapi-instrumentator",
 ]
 
 [dependency-groups]

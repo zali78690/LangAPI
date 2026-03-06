@@ -10,7 +10,7 @@ from starlette.responses import Response
 
 logger = structlog.stdlib.get_logger(__name__)
 
-SKIP_PATHS = frozenset({"/health"})
+SKIP_PATHS = frozenset({"/health", "/metrics"})
 
 
 class RequestLoggingMiddleware(BaseHTTPMiddleware):
