@@ -35,3 +35,10 @@ convention = "google"
 pythonVersion = "3.12"
 typeCheckingMode = "basic"
 
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+filterwarnings = [
+    "ignore::DeprecationWarning:importlib._bootstrap",
+    "ignore::UserWarning:transformers.models.marian",
+    "ignore::DeprecationWarning:sys",
+]

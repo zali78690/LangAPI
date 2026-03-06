@@ -1,6 +1,6 @@
 """Defines the shape of requests and responses for the API."""
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class TranslationRequest(BaseModel):
@@ -8,6 +8,14 @@ class TranslationRequest(BaseModel):
 
     text: str = Field(min_length=1, max_length=5000, description="The text to be translated.")
     target_language: str = Field(min_length=2, max_length=2, description="Language ISO code e.g., 'en' for English.")
+
+    @field_validator("text")
+    @classmethod
+    def reject_whitespace_only(cls, value: str):
+        """Reject whitespace only text."""
+        if not value.strip():
+            raise ValueError("Text must contain non-whitespace characters.")
+        return value
 
 
 class TranslationResponse(BaseModel):
