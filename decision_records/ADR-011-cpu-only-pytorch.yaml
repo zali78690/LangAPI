@@ -1,0 +1,17 @@
+ADR-011: CPU-Only PyTorch
+Status: Implemented
+Context: >
+  Default PyTorch includes CUDA libraries (~5-6GB of NVIDIA packages),
+  inflating the Docker image from ~5GB to ~15GB. Helsinki-NLP opus-mt
+  models are small enough for CPU inference with acceptable latency.
+Decision: >
+  Pin torch to the CPU-only PyTorch index via uv.sources in pyproject.toml.
+  Explicit index (pytorch-cpu) ensures only CPU wheels are resolved.
+Consequences:
+  - Docker image reduced from ~15GB to ~5GB
+  - No GPU inference support — CPU-only
+  - Acceptable trade-off: opus-mt models are small, translation latency is ~100-200ms on CPU
+  - uv lock must be regenerated if torch version changes
+Alternatives Rejected:
+  - Full PyTorch with CUDA: 10GB wasted on unused GPU libraries
+  - ONNX Runtime: would require model conversion step, adds complexity for marginal latency gain

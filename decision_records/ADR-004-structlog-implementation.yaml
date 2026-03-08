@@ -1,4 +1,4 @@
-ADR-007: structlog Implementation (supersedes ADR-004)
+ADR-004: structlog Implementation (supersedes ADR-004)
 Status: Implemented
 Context: >
   Production APIs need machine-parseable logs for monitoring and debugging.

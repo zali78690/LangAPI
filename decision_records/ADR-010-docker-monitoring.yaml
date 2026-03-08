@@ -1,0 +1,15 @@
+ADR-010: Docker Compose Monitoring Stack
+Status: Implemented
+Context: >
+  Phase 2 added Prometheus metrics to the app. Need a local monitoring stack
+  to visualize metrics during development and demonstrate observability for
+  the Fuzzy Labs take-home challenge.
+Decision: >
+  Docker Compose with 3 services: langapi, prometheus, grafana. Prometheus
+  scrapes /metrics every 15s. Grafana auto-provisions datasource and 4-panel
+  dashboard via file-based provisioning. Anonymous auth for local dev.
+Consequences:
+  - One command (docker compose up) starts full observability stack
+  - Dashboard shows request rate, latency percentiles, requests by language, model load time
+  - No manual Grafana configuration needed
+  - Monitoring config is version-controlled and reproducible

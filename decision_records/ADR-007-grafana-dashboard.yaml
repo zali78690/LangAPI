@@ -1,0 +1,19 @@
+ADR-007: Grafana Dashboard and Provisioning
+Status: Implemented
+Context: >
+  Need a pre-configured monitoring dashboard for the translation API.
+  Must be reproducible (version-controlled), require zero manual setup,
+  and work immediately with docker compose up.
+Decision: >
+  Hand-crafted 4-panel Grafana dashboard (JSON) with file-based provisioning.
+  Anonymous authentication enabled for local development — no login required.
+  Datasource and dashboard provider configured via YAML mounted as read-only volumes.
+Consequences:
+  - Dashboard is version-controlled and reproducible across environments
+  - Zero manual setup — Grafana auto-discovers datasource and dashboard on startup
+  - Anonymous auth simplifies local dev; production would restrict at ingress level
+  - 4 panels cover core observability: request rate, latency percentiles, language distribution, model load time
+Alternatives Rejected:
+  - Grafana UI export: bloated JSON with UI metadata, not reproducible
+  - Grafana API provisioning: requires running instance, adds startup complexity
+  - No dashboard (raw /metrics only): harder to demo, loses visual monitoring story
