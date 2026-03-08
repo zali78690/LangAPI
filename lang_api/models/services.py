@@ -1,7 +1,5 @@
 """Core of the app - loads huggingface model and translates text."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import cast
 
@@ -22,7 +20,7 @@ class TranslationService:
     language_model_mapping: dict[str, str]
 
     @staticmethod
-    def load_models(settings: Settings) -> TranslationService:
+    def load_models(settings: Settings) -> "TranslationService":
         """Load all translation models from settings.
 
         Args:
@@ -32,14 +30,14 @@ class TranslationService:
             TranslationService: Service with all models loaded.
         """
         models = {}
-        logger.info("Loading translation models...")
+        logger.info("loading_translation_models")
         for lang, model_id in settings.supported_languages.items():
-            logger.info("Loading model %s for %s", model_id, lang)
+            logger.info("loading_model", model_id=model_id, language=lang)
             with MODEL_LOAD_DURATION.labels(language=lang).time():
-                tokenizer = MarianTokenizer.from_pretrained(model_id)
-                model = MarianMTModel.from_pretrained(model_id)
+                tokenizer = MarianTokenizer.from_pretrained(model_id, cache_dir=settings.model_cache_dir)
+                model = MarianMTModel.from_pretrained(model_id, cache_dir=settings.model_cache_dir)
             models[lang] = (tokenizer, model)
-        logger.info("Models loaded: %s", list(settings.supported_languages.keys()))
+        logger.info("models_loaded", languages=list(settings.supported_languages.keys()))
         return TranslationService(models=models, language_model_mapping=settings.supported_languages)
 
     def translate(self, text: str, target_language: str) -> str:
@@ -58,7 +56,7 @@ class TranslationService:
         if target_language not in self.models:
             raise ValueError(f"Unsupported Language {target_language}")
 
-        logger.info("Translating to %s (%d chars)", target_language, len(text))
+        logger.info("translating", target_language=target_language, input_chars=len(text))
 
         tokenizer, model = self.models[target_language]
 
@@ -66,7 +64,8 @@ class TranslationService:
             inputs = tokenizer(text, return_tensors="pt", padding=True)
             outputs = model.generate(input_ids=inputs["input_ids"])
             result = cast(str, tokenizer.decode(outputs[0], skip_special_tokens=True))
-            TRANSLATION_REQUESTS.labels(target_language=target_language).inc()
+
+        TRANSLATION_REQUESTS.labels(target_language=target_language).inc()
 
         logger.info(
             "Translation complete", input_chars=len(text), output_chars=len(result), target_language=target_language
@@ -89,4 +88,4 @@ class TranslationService:
         Returns:
             bool: True if loaded False if not.
         """
-        return len(self.models) > 0
+        return bool(self.models)

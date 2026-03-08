@@ -6,6 +6,7 @@ from pydantic import ValidationError
 from lang_api.api.schemas import (
     ErrorResponse,
     HealthResponse,
+    LanguagesResponse,
     TranslationRequest,
     TranslationResponse,
 )
@@ -58,6 +59,20 @@ def test_translation_response_defaults_source_language():
     assert response.source_language == "en"
 
 
+def test_languages_response_accepts_valid_data():
+    """LanguagesResponse accepts language-to-model mapping."""
+    response = LanguagesResponse(
+        supported_languages={"fr": "Helsinki-NLP/opus-mt-en-fr", "de": "Helsinki-NLP/opus-mt-en-de"}
+    )
+    assert response.supported_languages == {"fr": "Helsinki-NLP/opus-mt-en-fr", "de": "Helsinki-NLP/opus-mt-en-de"}
+
+
+def test_languages_response_empty_dict():
+    """LanguagesResponse accepts empty dict."""
+    response = LanguagesResponse(supported_languages={})
+    assert response.supported_languages == {}
+
+
 def test_health_response_accepts_valid_data():
     """HealthResponse accepts well-formed data."""
     response = HealthResponse(
@@ -77,7 +92,7 @@ def test_health_response_empty_languages():
 
 
 def test_error_response_accepts_valid_data():
-    """ErrorResponse accepts well-formed data."""
-    response = ErrorResponse(error="not_found", detail="Language not supported")
-    assert response.error == "not_found"
-    assert response.detail == "Language not supported"
+    """ErrorResponse accepts well-formed error data."""
+    response = ErrorResponse(error="bad_request", detail="Unsupported Language ja")
+    assert response.error == "bad_request"
+    assert response.detail == "Unsupported Language ja"

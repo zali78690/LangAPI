@@ -13,7 +13,7 @@ services:
       retries: 3
 
   prometheus:
-    image: prom/prometheus:latest
+    image: prom/prometheus:v2.53.5
     ports:
       - "9090:9090"
     volumes:
@@ -23,10 +23,10 @@ services:
         condition: service_healthy
 
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:11.6.0
     ports:
       - "3000:3000"
-    environment:
+    environment: # These would be toggled off for prod
       - GF_AUTH_ANONYMOUS_ENABLED=true
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
       - GF_AUTH_DISABLE_LOGIN_FORM=true

@@ -4,6 +4,7 @@ from fastapi import APIRouter
 
 from lang_api.api.dependencies import TranslationServiceDep
 from lang_api.api.schemas import (
+    ErrorResponse,
     HealthResponse,
     LanguagesResponse,
     TranslationRequest,
@@ -13,7 +14,11 @@ from lang_api.api.schemas import (
 router = APIRouter()
 
 
-@router.post("/api/v1/translate", response_model=TranslationResponse)
+@router.post(
+    "/api/v1/translate",
+    response_model=TranslationResponse,
+    responses={400: {"model": ErrorResponse}, 500: {"model": ErrorResponse}},
+)
 def translate(request: TranslationRequest, service: TranslationServiceDep) -> TranslationResponse:
     """Translate English text to target language.
 

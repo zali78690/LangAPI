@@ -16,11 +16,13 @@ RUN uv sync --frozen --no-dev
 COPY lang_api/ lang_api/
 
 # Pre-download all translation models into /app/model-cache
-ENV HF_HOME=/app/model-cache
+# Uses LANGAPI_MODEL_CACHE_DIR so Settings.model_cache_dir is the single source of truth
+ENV LANGAPI_MODEL_CACHE_DIR=/app/model-cache
 RUN .venv/bin/python -c "\
+from lang_api.core.config import Settings; \
 from transformers.models.marian import MarianMTModel, MarianTokenizer; \
-models = ['Helsinki-NLP/opus-mt-en-fr', 'Helsinki-NLP/opus-mt-en-de', 'Helsinki-NLP/opus-mt-en-es']; \
-[(MarianTokenizer.from_pretrained(m), MarianMTModel.from_pretrained(m)) for m in models]; \
+s = Settings(); \
+[(MarianTokenizer.from_pretrained(m, cache_dir=s.model_cache_dir), MarianMTModel.from_pretrained(m, cache_dir=s.model_cache_dir)) for m in s.supported_languages.values()]; \
 print('All models downloaded')"
 
 # ---- Stage 2: Runtime ----
@@ -41,15 +43,11 @@ COPY --chown=appuser:appuser lang_api/ lang_api/
 
 # Configure environment
 ENV PATH="/app/.venv/bin:$PATH"
-ENV HF_HOME=/app/model-cache
-ENV LANGAPI_DEBUG=false
+ENV LANGAPI_MODEL_CACHE_DIR=/app/model-cache
 
 # Switch to non-root user
 USER appuser
 
 EXPOSE 8000
-
-HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" || exit 1
 
 CMD ["uvicorn", "lang_api.main:app", "--host", "0.0.0.0", "--port", "8000"]

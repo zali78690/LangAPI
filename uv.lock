@@ -262,6 +262,7 @@ version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "fastapi" },
+    { name = "prometheus-client" },
     { name = "prometheus-fastapi-instrumentator" },
     { name = "pydantic-settings" },
     { name = "sacremoses" },
@@ -285,6 +286,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "fastapi" },
+    { name = "prometheus-client" },
     { name = "prometheus-fastapi-instrumentator" },
     { name = "pydantic-settings" },
     { name = "sacremoses" },

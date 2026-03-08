@@ -4,8 +4,6 @@ from unittest.mock import MagicMock
 
 from fastapi.testclient import TestClient
 
-from lang_api.api.dependencies import get_translation_service
-from lang_api.core.app import create_app
 from lang_api.models.services import TranslationService
 
 
@@ -49,18 +47,16 @@ class TestTranslateEndpoint:
         assert response.status_code == 400
         assert response.json()["error"] == "bad_request"
 
-    def test_translate_unexpected_error_returns_500(self):
+    def test_translate_unexpected_error_returns_500(self, make_client):
         """500 on unexpected error, no stack trace leaked."""
         mock_service = MagicMock(spec=TranslationService)
         mock_service.translate.side_effect = RuntimeError("something broke")
 
-        app = create_app()
-        app.dependency_overrides[get_translation_service] = lambda: mock_service
-        with TestClient(app, raise_server_exceptions=False) as client:
-            response = client.post(
-                "/api/v1/translate",
-                json={"text": "Hello", "target_language": "fr"},
-            )
+        client = make_client(mock_service)
+        response = client.post(
+            "/api/v1/translate",
+            json={"text": "Hello", "target_language": "fr"},
+        )
         assert response.status_code == 500
         data = response.json()
         assert data["error"] == "internal_error"
@@ -89,12 +85,10 @@ class TestHealthEndpoint:
         assert data["models_loaded"] is True
         assert "fr" in data["supported_languages"]
 
-    def test_health_when_no_models(self, empty_translation_service: TranslationService):
+    def test_health_when_no_models(self, empty_translation_service: TranslationService, make_client):
         """200 unhealthy when no models loaded."""
-        app = create_app()
-        app.dependency_overrides[get_translation_service] = lambda: empty_translation_service
-        with TestClient(app, raise_server_exceptions=False) as client:
-            response = client.get("/health")
+        client = make_client(empty_translation_service)
+        response = client.get("/health")
         assert response.status_code == 200
         data = response.json()
         assert data["status"] == "unhealthy"

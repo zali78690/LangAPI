@@ -31,16 +31,25 @@ class TestMetricsEndpoint:
 
 
 class TestCustomMetrics:
-    """Tests for custom business metrics."""
+    """Tests for custom business metrics are exposed on /metrics endpoint."""
 
-    def test_translation_requests_counter_exists(self) -> None:
-        """Translation counter is registered in Prometheus registry."""
-        assert TRANSLATION_REQUESTS._name == "translation_requests"
+    def test_translation_requests_counter_exposed(self, test_client: TestClient) -> None:
+        """Translation counter appears in /metrics output."""
+        response = test_client.get("/metrics")
+        assert "translation_requests_total" in response.text
 
-    def test_translation_duration_histogram_exists(self) -> None:
-        """Translation duration histogram is registered."""
-        assert TRANSLATION_DURATION._name == "translation_duration_seconds"
+    def test_translation_duration_histogram_exposed(self, test_client: TestClient) -> None:
+        """Translation duration histogram appears in /metrics output."""
+        response = test_client.get("/metrics")
+        assert "translation_duration_seconds" in response.text
 
-    def test_model_load_duration_histogram_exists(self) -> None:
-        """Model load duration histogram is registered."""
-        assert MODEL_LOAD_DURATION._name == "model_load_duration_seconds"
+    def test_model_load_duration_histogram_exposed(self, test_client: TestClient) -> None:
+        """Model load duration histogram appears in /metrics output."""
+        response = test_client.get("/metrics")
+        assert "model_load_duration_seconds" in response.text
+
+    def test_custom_metrics_have_correct_types(self) -> None:
+        """Custom metrics are the expected Prometheus types."""
+        assert type(TRANSLATION_REQUESTS).__name__ == "Counter"
+        assert type(TRANSLATION_DURATION).__name__ == "Histogram"
+        assert type(MODEL_LOAD_DURATION).__name__ == "Histogram"

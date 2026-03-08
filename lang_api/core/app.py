@@ -11,6 +11,7 @@ from transformers import logging as transformers_logging
 
 from lang_api.api.middleware import RequestLoggingMiddleware
 from lang_api.api.routes import router
+from lang_api.api.schemas import ErrorResponse
 from lang_api.core.config import Settings
 from lang_api.core.logging import configure_logging
 from lang_api.core.metrics import setup_metrics
@@ -21,19 +22,26 @@ logger = structlog.stdlib.get_logger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
-    """Loads model on startup, cleans on shutdown.
+    """Manages application startup and shutdown lifecycle.
+
+    Startup: loads translation models into memory.
+    Shutdown: releases model references for clean garbage collection.
 
     Args:
         app (FastAPI): FastAPI app instance.
 
     Yields:
-        None: Application runs between startup and shutdown
+        None: Application runs between startup and shutdown.
     """
     warnings.filterwarnings("ignore", category=FutureWarning, module="transformers")
     transformers_logging.set_verbosity_error()
 
     app.state.translation_service = TranslationService.load_models(app.state.settings)
+    logger.info("startup_complete", languages=app.state.translation_service.supported_languages)
     yield
+    # Shutdown: release model references so garbage collector can reclaim GPU/CPU memory
+    logger.info("shutdown", action="releasing_models")
+    app.state.translation_service = None
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -73,10 +81,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         Returns:
             JSONResponse: Error response with 400 status.
         """
-        logger.warning("Bad request on %s %s: %s", request.method, request.url, exception)
+        logger.warning("bad_request", method=request.method, path=request.url.path, detail=str(exception))
         return JSONResponse(
             status_code=400,
-            content={"error": "bad_request", "detail": str(exception)},
+            content=ErrorResponse(error="bad_request", detail=str(exception)).model_dump(),
         )
 
     @app.exception_handler(Exception)
@@ -90,10 +98,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         Returns:
             JSONResponse: Error response with 500 status.
         """
-        logger.exception("Unhandled error on %s %s", request.method, request.url)
+        logger.exception("unhandled_error", method=request.method, path=request.url.path)
         return JSONResponse(
             status_code=500,
-            content={"error": "internal_error", "detail": "An unexpected error occurred"},
+            content=ErrorResponse(error="internal_error", detail="An unexpected error occurred").model_dump(),
         )
 
     return app

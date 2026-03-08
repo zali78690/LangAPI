@@ -1,6 +1,6 @@
 """Shared fixtures for tests."""
 
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from unittest.mock import MagicMock
 
 import pytest
@@ -51,6 +51,18 @@ def test_client(mock_translation_service: TranslationService) -> Generator[TestC
     with TestClient(app, raise_server_exceptions=False) as client:
         yield client
     app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def make_client() -> Callable[[TranslationService], TestClient]:
+    """Factory fixture for creating a TestClient with a custom service override."""
+
+    def make(service: TranslationService) -> TestClient:
+        app = create_app()
+        app.dependency_overrides[get_translation_service] = lambda: service
+        return TestClient(app, raise_server_exceptions=False)
+
+    return make
 
 
 @pytest.fixture(autouse=True)

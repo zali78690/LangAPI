@@ -11,7 +11,7 @@ class TranslationRequest(BaseModel):
 
     @field_validator("text")
     @classmethod
-    def reject_whitespace_only(cls, value: str):
+    def reject_whitespace_only(cls, value: str) -> str:
         """Reject whitespace only text."""
         if not value.strip():
             raise ValueError("Text must contain non-whitespace characters.")

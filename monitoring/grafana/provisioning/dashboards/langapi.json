@@ -23,7 +23,7 @@
       "datasource": {
         "type": "prometheus"
       },
-      "description": "HTTP requests per second by status code",
+      "description": "HTTP requests per minute by status code",
       "fieldConfig": {
         "defaults": {},
         "overrides": []
@@ -37,8 +37,8 @@
       "id": 1,
       "options": {
         "legend": {
-          "calcs": [],
-          "displayMode": "list",
+          "calcs": ["mean", "lastNotNull"],
+          "displayMode": "table",
           "placement": "bottom"
         },
         "tooltip": {
@@ -51,19 +51,19 @@
           "datasource": {
             "type": "prometheus"
           },
-          "expr": "sum(rate(http_requests_total{handler=~\"/api/.*\"}[5m])) by (status)",
+          "expr": "sum(rate(http_requests_total{handler=~\"/api/.*\"}[5m])) by (status) * 60",
           "legendFormat": "{{status}}",
           "refId": "A"
         }
       ],
-      "title": "Request Rate",
+      "title": "Request Rate (req/min)",
       "type": "timeseries"
     },
     {
       "datasource": {
         "type": "prometheus"
       },
-      "description": "Translation inference time percentiles",
+      "description": "Translation inference time percentiles (p50 = typical, p99 = worst case)",
       "fieldConfig": {
         "defaults": {
           "unit": "s"
@@ -79,8 +79,8 @@
       "id": 2,
       "options": {
         "legend": {
-          "calcs": [],
-          "displayMode": "list",
+          "calcs": ["mean", "lastNotNull"],
+          "displayMode": "table",
           "placement": "bottom"
         },
         "tooltip": {
@@ -121,7 +121,7 @@
       "datasource": {
         "type": "prometheus"
       },
-      "description": "Translation requests per second by target language",
+      "description": "Translation requests per minute by target language",
       "fieldConfig": {
         "defaults": {},
         "overrides": []
@@ -135,8 +135,8 @@
       "id": 3,
       "options": {
         "legend": {
-          "calcs": [],
-          "displayMode": "list",
+          "calcs": ["mean", "lastNotNull"],
+          "displayMode": "table",
           "placement": "bottom"
         },
         "tooltip": {
@@ -149,12 +149,12 @@
           "datasource": {
             "type": "prometheus"
           },
-          "expr": "sum(rate(translation_requests_total[5m])) by (target_language)",
+          "expr": "sum(rate(translation_requests_total[5m])) by (target_language) * 60",
           "legendFormat": "{{target_language}}",
           "refId": "A"
         }
       ],
-      "title": "Requests by Language",
+      "title": "Requests by Language (req/min)",
       "type": "timeseries"
     },
     {
