@@ -15,6 +15,8 @@ LangAPI is a translation API built with FastAPI and HuggingFace's MarianMT model
 - Structured JSON logging (structlog) with console mode for development
 - Request correlation IDs (X-Request-ID) for tracing
 - Prometheus metrics endpoint (`/metrics`) for production monitoring
+- Pre-configured Grafana dashboard with request rate, latency, and language distribution panels
+- Dockerised deployment with multi-stage build and model pre-caching
 
 ## Tech Stack
 
@@ -39,7 +41,7 @@ LangAPI is a translation API built with FastAPI and HuggingFace's MarianMT model
 - Python 3.12+
 - [uv](https://docs.astral.sh/uv/) package manager
 - [Docker](https://docs.docker.com/get-docker/) (for containerised deployment and monitoring stack)
-- ~1GB disk space for model downloads (cached after first run)
+- ~1GB disk space for model downloads when running locally (cached after first run). Running via Docker container requires ~5GB on disk — see [Resource Requirements](#resource-requirements)
 
 ## Quick Start
 
@@ -53,6 +55,12 @@ uv run uvicorn lang_api.main:app
 The first startup downloads three translation models (~300MB each). Subsequent startups use the cached models.
 
 Once running, visit http://localhost:8000/docs for the interactive Swagger UI.
+
+Run the test suite (does not require model downloads):
+
+```bash
+uv run pytest
+```
 
 ## API Endpoints
 
@@ -131,7 +139,9 @@ docker-compose.yml       # App + Prometheus + Grafana stack
 Makefile                 # Dev/ops command shortcuts
 ```
 
-## Docker
+## Docker (API Only)
+
+Run just the translation API without monitoring. Use this for quick testing or when you don't need Prometheus/Grafana.
 
 Build the image (first build downloads models, ~2 min):
 
@@ -161,9 +171,11 @@ The image uses a multi-stage build that pre-downloads all translation models at 
 | RAM | ~2GB | ~600MB per loaded model + PyTorch runtime overhead |
 | CPU | 1+ cores | Inference is CPU-bound; more cores = faster under concurrent load |
 
-## Monitoring Stack
+## Monitoring Stack (API + Prometheus + Grafana)
 
-Start the full stack (app + Prometheus + Grafana):
+Run the API with the full observability stack. Use this when you want to explore metrics and dashboards.
+
+Start the full stack:
 
 ```bash
 docker compose up --build
