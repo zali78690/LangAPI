@@ -1,0 +1,16 @@
+ADR-009: Docker Multi-Stage Build
+Status: Implemented
+Context: >
+  LangAPI serves 3 Helsinki-NLP translation models (~900MB total).
+  Without model pre-download, cold start takes ~60s downloading from HuggingFace.
+  Need deterministic, fast-starting container for production deployment.
+Decision: >
+  Multi-stage Dockerfile with python:3.12-slim. Builder stage installs deps
+  via uv and pre-downloads all models. Runtime stage copies venv + model cache,
+  runs as non-root appuser (uid 1000). HF_HOME env var points to pre-cached models.
+Consequences:
+  - Container starts in ~5s (models pre-cached vs ~60s download)
+  - Image size ~2.5GB (torch + 3 models) — inherent to ML workloads
+  - No internet access needed at runtime
+  - Non-root user for security
+  - Docker layer caching — code changes don't re-download models

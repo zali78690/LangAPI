@@ -119,6 +119,28 @@ tests/
     test_services.py       # TranslationService unit tests
 ```
 
+## Docker
+
+Build the image (first build downloads models, ~2 min):
+
+```bash
+docker build -t langapi .
+```
+
+Run the container:
+
+```bash
+docker run -p 8000:8000 langapi
+```
+
+Override settings via environment variables:
+
+```bash
+docker run -p 8000:8000 -e LANGAPI_DEBUG=true langapi
+```
+
+The image uses a multi-stage build that pre-downloads all translation models at build time. This gives ~5s startup (vs ~60s without pre-caching). Image size is ~2.5GB due to PyTorch and 3 translation models.
+
 ## Development
 
 Install dev dependencies and set up pre-commit hooks:
