@@ -1,0 +1,16 @@
+ADR-013: Sync Route Handlers for CPU-Bound Inference
+Status: Implemented
+Context: >
+  Translation inference (model.generate()) is CPU-bound and blocking.
+  FastAPI supports both sync (def) and async (async def) route handlers.
+  Need to handle concurrent requests without blocking the event loop.
+Decision: >
+  Use sync def handlers, not async def. FastAPI automatically runs sync handlers
+  in a threadpool via run_in_executor(). Each concurrent request gets its own
+  thread. Using async def would block the event loop during model.generate(),
+  preventing all other requests from being processed.
+Consequences:
+  - Concurrent requests handled correctly via threadpool
+  - No asyncio overhead for CPU-bound work
+  - Thread count limits max concurrency (uvicorn default: 40 threads)
+  - Trade-off: thread memory overhead (~8MB per thread) vs event loop blocking

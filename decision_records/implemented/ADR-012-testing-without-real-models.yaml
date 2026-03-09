@@ -1,0 +1,17 @@
+ADR-012: Testing Without Real Models
+Status: Implemented
+Context: >
+  Translation models are ~300MB each (~900MB total). Downloading them in CI
+  or on every test run is slow, flaky (network dependency), and unnecessary
+  for testing application logic.
+Decision: >
+  conftest.py autouse fixture monkeypatches TranslationService.load_models
+  to return an empty service, preventing real downloads. Test fixtures provide
+  MagicMock tokenizer/model pairs injected via FastAPI dependency overrides.
+  Factory fixture (make_client) allows per-test service customisation.
+Consequences:
+  - Test suite runs in <1s with zero network calls
+  - No model downloads in CI — fast, deterministic pipelines
+  - Tests verify application logic (routing, validation, error handling) not model quality
+  - MagicMock returns controlled outputs — tests are deterministic
+  - Trade-off: model integration issues (e.g. tokenizer output shape) not caught by unit tests

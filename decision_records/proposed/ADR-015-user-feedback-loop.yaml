@@ -1,0 +1,45 @@
+ADR-015: User Feedback Loop
+Status: Proposed
+Research Question: How can you incorporate end user feedback? (Q5)
+Context: >
+  No mechanism for users to report bad translations or rate quality.
+  Automated metrics (BLEU) don't capture real-world user satisfaction.
+Decision: >
+  POST /api/v1/feedback endpoint accepting request_id, rating (1-5), and
+  optional corrected translation. Correlate feedback with request logs via
+  the existing X-Request-ID middleware. Aggregate ratings per language pair
+  to identify underperforming models. Corrected translations could seed
+  fine-tuning datasets over time. This follows the industry-standard MTPE
+  (Machine Translation Post-Editing) workflow: MT → automated checks →
+  human post-editing → feedback loop.
+Packages: ["sqlalchemy", "alembic (migrations)", "sqlite (dev) / postgresql (prod)"]
+Rejected Alternatives:
+  - title: Thumbs up/down only (no corrected translation)
+    reason: >
+      Simpler to implement but loses the most valuable signal. A corrected
+      translation tells you exactly what went wrong. Thumbs up/down only
+      tells you something was bad, not how to fix it. Research from the
+      University of Maryland confirms score-based feedback alone shows the
+      least improvement in MT output vs fine-grained corrections.
+  - title: Inline feedback on translation response
+    reason: >
+      Embedding a feedback URL in every API response adds noise to the
+      contract. Feedback is a separate concern — a dedicated endpoint keeps
+      the translation response clean and makes feedback optional.
+  - title: External survey tool (e.g. Typeform, Google Forms)
+    reason: >
+      Breaks the request_id correlation. No programmatic access to feedback
+      data. Cannot automate analysis or trigger alerts on quality drops.
+      Industry best practice recommends structured error tracking with
+      traceability over ad-hoc feedback collection.
+Consequences:
+  - Real-world quality signal beyond automated metrics
+  - request_id correlation links feedback to specific translations and logs
+  - Corrected translations could seed fine-tuning datasets
+  - Supports both light post-editing (fix meaning-breaking errors) and full post-editing (publishable quality)
+  - Adds persistence layer (DB dependency) and a new endpoint to maintain
+References:
+  - "Quality at Scale: MT and Human-in-the-Loop Translation Workflows — https://cobbai.com/blog/translation-quality-support"
+  - "Guiding LLMs to Post-Edit MT with Error Annotations — https://arxiv.org/html/2404.07851v1"
+  - "Stanford: The Efficacy of Human Post-Editing — http://vis.stanford.edu/files/2013-PostEditing-CHI.pdf"
+  - "Machine Translation Post-Editing: The Complete Guide — https://crowdin.com/blog/mt-post-editing"

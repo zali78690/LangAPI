@@ -1,0 +1,40 @@
+ADR-016: Input Safeguarding
+Status: Proposed
+Research Question: How would you safeguard the translation service? (Q6)
+Context: >
+  Current safeguards are Pydantic validation only (1-5000 chars, non-whitespace,
+  2-char language code). No protection against non-English input, abusive
+  content, or anomalous model output.
+Decision: >
+  Layered safeguards, each decoupled from translation logic:
+  1. Input language detection — reject non-English text before inference
+  2. Output length ratio check — flag translations significantly longer/shorter
+     than input (ratio >3x or <0.2x suggests hallucination or truncation)
+  3. Rate limiting per client IP at middleware level
+  4. Content filtering for PII/toxic input (optional, use-case dependent)
+Packages: ["lingua-language-detector or langdetect", "slowapi (rate limiting)"]
+Rejected Alternatives:
+  - title: Validate input with the translation model itself
+    reason: >
+      MarianMT will attempt to translate any input regardless of source
+      language — it doesn't reject non-English text, it produces garbage.
+      Wasting inference compute on invalid input is worse than a fast
+      pre-check.
+  - title: Hard-block on output length ratio
+    reason: >
+      Some language pairs legitimately produce longer/shorter translations
+      (e.g. German compounds). A hard block would create false positives.
+      Better to log a warning and let the response through, then investigate
+      flagged translations offline.
+  - title: Rate limiting in application code vs API gateway
+    reason: >
+      Application-level (slowapi) works for single-instance deployments.
+      In production with multiple replicas, rate limiting should move to the
+      API gateway (e.g. Kong, Nginx, K8s ingress) for shared state across
+      instances. Start with slowapi, graduate to gateway.
+Consequences:
+  - Catches non-English input before wasting inference compute
+  - Length ratio flags potential model failures without blocking responses
+  - Rate limiting prevents abuse without infrastructure changes initially
+  - Language detection adds ~10ms latency and ~30MB dependency (lingua)
+  - Trade-off: langdetect is lighter but less accurate than lingua

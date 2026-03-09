@@ -6,11 +6,15 @@ Context: >
   Need deterministic, fast-starting container for production deployment.
 Decision: >
   Multi-stage Dockerfile with python:3.12-slim. Builder stage installs deps
-  via uv and pre-downloads all models. Runtime stage copies venv + model cache,
-  runs as non-root appuser (uid 1000). HF_HOME env var points to pre-cached models.
+  via uv and pre-downloads all models using Settings().supported_languages (single
+  source of truth). Runtime stage copies venv + model cache, runs as non-root
+  appuser (uid 1000). LANGAPI_MODEL_CACHE_DIR env var wires through Settings.model_cache_dir
+  to from_pretrained(cache_dir=...) in both stages. HF_HOME not used — it stores
+  under a hub/ subdirectory causing path mismatch with cache_dir=.
 Consequences:
   - Container starts in ~5s (models pre-cached vs ~60s download)
-  - Image size ~2.5GB (torch + 3 models) — inherent to ML workloads
+  - Image size ~5GB (CPU-only PyTorch + 3 models + HuggingFace cache + deps)
   - No internet access needed at runtime
   - Non-root user for security
   - Docker layer caching — code changes don't re-download models
+  - Model list DRY'd from config.py — adding a language auto-downloads at build time

@@ -6,6 +6,8 @@ RESTful API serving Helsinki-NLP translation models for English to French, Germa
 
 LangAPI is a translation API built with FastAPI and HuggingFace's MarianMT models. It serves translations via a REST interface with auto-generated OpenAPI documentation.
 
+Key architectural decisions are documented as [Architecture Decision Records](decision_records/) (YAML format), split into [implemented](decision_records/implemented/) and [proposed](decision_records/proposed/) decisions.
+
 ## Features
 
 - Translate English text to French, German, or Spanish
@@ -121,7 +123,9 @@ monitoring/
     prometheus.yml         # Scrape config (langapi:8000 every 15s)
   grafana/
     provisioning/          # Datasource, dashboard provider, dashboard JSON
-decision_records/        # Architecture Decision Records (YAML)
+decision_records/
+  implemented/             # Decisions currently in the codebase
+  proposed/                # Future improvements with concrete approaches
 tests/
   conftest.py              # Shared fixtures (mock services, test client)
   api/

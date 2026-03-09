@@ -1,0 +1,33 @@
+ADR-014: Translation Quality Evaluation
+Status: Proposed
+Research Question: How would you evaluate the quality of translations? (Q2)
+Context: >
+  MarianMT models produce translations but there is no automated way to measure
+  quality or detect regressions after model updates.
+Decision: >
+  Offline batch evaluation against standard benchmarks (e.g. WMT newstest
+  datasets). Score each language pair with BLEU and chrF metrics. Run as a
+  scheduled job, not per-request. Track scores over time in a Grafana panel
+  alongside existing operational metrics.
+Packages: ["sacrebleu", "datasets (HuggingFace)"]
+Rejected Alternatives:
+  - title: Real-time per-request evaluation
+    reason: >
+      Requires reference translations for every input — impossible for
+      arbitrary user text. Also adds latency to every request for a metric
+      that only matters in aggregate.
+  - title: LLM-as-judge (e.g. Claude/GPT scoring)
+    reason: >
+      Adds external API dependency, cost per evaluation, and introduces
+      a non-deterministic judge. Useful for subjective fluency checks but
+      not suitable as a primary automated metric.
+  - title: Back-translation (translate output back to English, compare)
+    reason: >
+      Circular — uses the same model family to validate itself. A bad
+      model might produce bad translations that back-translate cleanly.
+      Only useful as a rough sanity check, not a quality metric.
+Consequences:
+  - Quantitative baseline for each language pair
+  - Detects quality regressions after model updates
+  - Does not measure subjective quality (fluency, tone) — pair with user feedback (ADR-015)
+  - Requires curated reference translations for each language

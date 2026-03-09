@@ -19,7 +19,7 @@ class TranslationService:
     models: dict[str, tuple[MarianTokenizer, MarianMTModel]]
     language_model_mapping: dict[str, str]
 
-    @staticmethod
+    @staticmethod  # Not @classmethod — runs before any instance exists, pure factory function
     def load_models(settings: Settings) -> "TranslationService":
         """Load all translation models from settings.
 
