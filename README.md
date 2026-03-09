@@ -98,7 +98,7 @@ Settings are loaded from environment variables with the `LANGAPI_` prefix.
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `LANGAPI_SUPPORTED_LANGUAGES` | JSON dict of language codes to model IDs | `{"fr": "Helsinki-NLP/opus-mt-en-fr", "de": "Helsinki-NLP/opus-mt-en-de", "es": "Helsinki-NLP/opus-mt-en-es"}` |
-| `LANGAPI_MODEL_CACHE_DIR` | Override HuggingFace model cache directory | `None` (uses HF default) |
+| `LANGAPI_MODEL_CACHE_DIR` | Model cache directory (passed to `from_pretrained(cache_dir=...)`) | `None` (uses HuggingFace default `~/.cache/huggingface`) |
 | `LANGAPI_DEBUG` | Enable console-formatted logs for development | `False` |
 
 ## Project Structure
